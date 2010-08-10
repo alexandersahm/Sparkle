@@ -8,6 +8,7 @@
 
 #import "Sparkle.h"
 #import "SUAppcast.h"
+#import "SUStandardVersionComparator.h"
 
 @interface NSXMLElement (SUAppcastExtensions)
 - (NSDictionary *)attributesAsDictionary;
@@ -44,6 +45,22 @@
 - (NSArray *)items
 {
 	return items;
+}
+
+- (NSArray *)updateItemsBetweenVersion:(NSString *)olderVersion andVersion:(NSString *)newerVersion
+{
+	SUStandardVersionComparator *comperator = [SUStandardVersionComparator defaultComparator];
+	NSMutableArray *returnedItems = [NSMutableArray array];
+	for (SUAppcastItem *oneItem in items) {
+		NSComparisonResult newer = [comperator compareVersion:[oneItem versionString] toVersion:olderVersion];
+		NSComparisonResult older = [comperator compareVersion:[oneItem versionString] toVersion:newerVersion];
+		
+		if (newer == NSOrderedDescending && (older == NSOrderedAscending || older == NSOrderedSame) ) {
+			[returnedItems addObject:oneItem];
+		}
+	}
+	
+	return [NSArray arrayWithArray:returnedItems];
 }
 
 - (void)fetchAppcastFromURL:(NSURL *)url
@@ -179,7 +196,7 @@
             }
             
 			NSString *errString;
-			SUAppcastItem *anItem = [[[SUAppcastItem alloc] initWithDictionary:dict failureReason:&errString] autorelease];
+			SUAppcastItem *anItem = [[[SUAppcastItem alloc] initWithDictionary:dict appcast:self failureReason:&errString] autorelease];
             if (anItem)
             {
                 [appcastItems addObject:anItem];

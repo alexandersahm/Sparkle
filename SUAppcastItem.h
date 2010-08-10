@@ -9,6 +9,8 @@
 #ifndef SUAPPCASTITEM_H
 #define SUAPPCASTITEM_H
 
+@class SUAppcast;
+
 @interface SUAppcastItem : NSObject
 {
 @private
@@ -28,11 +30,15 @@
 	NSDictionary *deltaUpdates;
 
 	NSDictionary *propertiesDictionary;
+	
+	//the appcast this item is contained by
+	SUAppcast *appcast;
 }
 
 // Initializes with data from a dictionary provided by the RSS class.
 - initWithDictionary:(NSDictionary *)dict;
 - initWithDictionary:(NSDictionary *)dict failureReason:(NSString**)error;
+- initWithDictionary:(NSDictionary *)dict appcast:(SUAppcast *)theAppcast failureReason:(NSString**)error;
 
 - (NSString *)title;
 - (NSString *)versionString;
@@ -48,6 +54,8 @@
 
 // Returns the dictionary provided in initWithDictionary; this might be useful later for extensions.
 - (NSDictionary *)propertiesDictionary;
+
+- (SUAppcast *)appcast;
 
 @end
 

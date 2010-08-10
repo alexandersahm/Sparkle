@@ -109,6 +109,11 @@
 	deltaUpdates = [updates copy];
 }
 
+- (SUAppcast *)appcast
+{
+	return [[appcast retain] autorelease];
+}
+
 - (BOOL)isDeltaUpdate
 {
 	return [[propertiesDictionary objectForKey:@"enclosure"] objectForKey:@"sparkle:deltaFrom"] != nil;
@@ -224,6 +229,15 @@
 	return self;
 }
 
+- initWithDictionary:(NSDictionary *)dict appcast:(SUAppcast *)theAppcast failureReason:(NSString**)error
+{
+	self = [self initWithDictionary:dict failureReason:error];
+	if (self != nil) {
+		appcast = [theAppcast retain];
+	}
+	return self;
+}
+
 - (void)dealloc
 {
 	[title release];
@@ -236,6 +250,7 @@
 	[versionString release];
 	[displayVersionString release];
 	[propertiesDictionary release];
+	[appcast release];
     [super dealloc];
 }
 

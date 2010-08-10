@@ -28,6 +28,11 @@ typedef enum
 	IBOutlet NSTextField *description;
 	NSProgressIndicator *releaseNotesSpinner;
 	BOOL webViewFinishedLoading;
+	
+	NSMutableData *downloadingData;
+	NSMutableArray *releaseNoteURLsToLoad;
+	NSMutableString *commulatedReleaseNotes;
+	
 }
 
 - (id)initWithAppcastItem:(SUAppcastItem *)item host:(SUHost *)host;
@@ -36,6 +41,8 @@ typedef enum
 - (IBAction)installUpdate:sender;
 - (IBAction)skipThisVersion:sender;
 - (IBAction)remindMeLater:sender;
+
+- (void)loadCommulatedReleaseNotes;
 
 @end
 

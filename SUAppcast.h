@@ -26,6 +26,8 @@
 
 - (NSArray *)items;
 
+- (NSArray *)updateItemsBetweenVersion:(NSString *)olderVersion andVersion:(NSString *)newerVersion;
+
 @end
 
 @interface NSObject (SUAppcastDelegate)

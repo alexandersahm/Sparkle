@@ -18,6 +18,7 @@
 	self = [super initWithHost:host windowNibName:@"SUUpdateAlert"];
 	if (self)
 	{
+		downloadingData = [[NSMutableData data] retain];
 		host = [aHost retain];
 		updateItem = [item retain];
 		[self setShouldCascadeWindows:NO];
@@ -31,6 +32,9 @@
 {
 	[updateItem release];
 	[host release];
+	[commulatedReleaseNotes release];
+	[downloadingData release];
+	[releaseNoteURLsToLoad release];
 	[super dealloc];
 }
 
@@ -86,7 +90,8 @@
 		}
 		else
 		{
-			[[releaseNotesView mainFrame] loadRequest:[NSURLRequest requestWithURL:[updateItem releaseNotesURL] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:30]];
+			[self loadCommulatedReleaseNotes];
+			//[[releaseNotesView mainFrame] loadRequest:[NSURLRequest requestWithURL:[updateItem releaseNotesURL] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:30]];
 		}
 	}
 	else
@@ -227,6 +232,91 @@
 - (void)setDelegate:del
 {
 	delegate = del;
+}
+
+
+//=====================================================
+#pragma mark -
+#pragma mark commulating release notes
+//=====================================================
+
+- (void)loadCommulatedReleaseNotes
+{
+	NSArray *itemsBetween = [[updateItem appcast] updateItemsBetweenVersion:[host version] andVersion:[updateItem versionString]];
+	
+	[releaseNoteURLsToLoad release];
+	releaseNoteURLsToLoad = [[NSMutableArray array] retain];
+	
+	[commulatedReleaseNotes release];
+	commulatedReleaseNotes = [[NSMutableString string] retain];
+	
+	for (SUAppcastItem *oneItem in itemsBetween) {
+		NSLog(@"download from url: %@",[oneItem releaseNotesURL]);
+		
+		[releaseNoteURLsToLoad addObject:[oneItem releaseNotesURL]];
+	}
+	
+	if ([releaseNoteURLsToLoad count] > 0) {
+		//create first download request, newest release notes
+		NSURLRequest *firstRequest = [NSURLRequest requestWithURL:[releaseNoteURLsToLoad objectAtIndex:0]];
+		NSURLConnection *firstConnection = [[NSURLConnection connectionWithRequest:firstRequest delegate:self] retain];
+		
+		if (!firstConnection) {
+			NSLog(@"error creating connection");
+		}
+		
+		[releaseNoteURLsToLoad removeObjectAtIndex:0];
+	}
+}
+
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
+{
+    [downloadingData setLength:0];
+}
+
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
+{
+    [downloadingData appendData:data];
+}
+
+- (void)connection:(NSURLConnection *)connection
+  didFailWithError:(NSError *)error
+{
+    // release the connection, and reset data object
+    [connection release];
+    [downloadingData setLength:0];
+	
+    // inform the user
+    NSLog(@"Sarkle Update failed: Connection failed!");
+}
+
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection
+{	
+    // release the connection, and reset data object
+    [connection release];
+	
+	NSString *newPart = [[NSString alloc] initWithData:downloadingData encoding:NSUTF8StringEncoding];
+	[commulatedReleaseNotes appendString:newPart];
+	[newPart release];
+	
+	if ([releaseNoteURLsToLoad count] > 0) {
+		//create next download request
+		NSURLRequest *firstRequest = [NSURLRequest requestWithURL:[releaseNoteURLsToLoad objectAtIndex:0]];
+		NSURLConnection *firstConnection = [[NSURLConnection connectionWithRequest:firstRequest delegate:self] retain];
+		
+		if (!firstConnection) {
+			NSLog(@"error creating connection");
+		}
+		
+		[releaseNoteURLsToLoad removeObjectAtIndex:0];
+	}
+	else {
+		//show release notes to user using web view
+		
+		[[releaseNotesView mainFrame] loadHTMLString:commulatedReleaseNotes 
+											 baseURL:[updateItem releaseNotesURL]];
+	}
+
 }
 
 @end
