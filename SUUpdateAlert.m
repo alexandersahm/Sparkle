@@ -251,8 +251,6 @@
 	commulatedReleaseNotes = [[NSMutableString string] retain];
 	
 	for (SUAppcastItem *oneItem in itemsBetween) {
-		NSLog(@"download from url: %@",[oneItem releaseNotesURL]);
-		
 		[releaseNoteURLsToLoad addObject:[oneItem releaseNotesURL]];
 	}
 	
